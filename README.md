@@ -7,39 +7,38 @@ summary of the included scripts.
 
 ## Contents
 
-**CTmax-Rqtl-analysis_clean.R**
+* **CTmax-Rqtl-analysis_clean.R**
 
-Description: Full R/qtl pipeline, including sample and marker filtration steps,
-             model selection, QTL scan, LOD threshold permutation, and plots  
+  * *Description: Full R/qtl pipeline, including sample and marker filtration steps,
+                  model selection, QTL scan, LOD threshold permutation, and plots.*
 
+* **perform_glm_admixture_mapping_v2_gaussian_plus-multiple-cov.R** 
 
-**perform_glm_admixture_mapping_v2_gaussian_plus-multiple-cov.R** 
-
-Description: Perform admixture mapping (with GLM), where genotype is encoded
-             as a numeric variable. 
-
-
-**perform_glm_admixture_mapping_v2_gaussian_plus-multiple-cov_categorical-geno.R** 
-
-Description: Perform admixture mapping (with GLM), where genotype is encoded
-             as a categorical variable.
+  * *Description: Perform admixture mapping (with GLM), where genotype is encoded
+                  as a numeric variable.* 
 
 
-**perform_glm_admixture_mapping_v2_gaussian_plus-multiple-cov_categorical-geno_NULL.R**
+* **perform_glm_admixture_mapping_v2_gaussian_plus-multiple-cov_categorical-geno.R** 
 
-Description: Perform null simulations of admixture mapping (categorical genotype) to
-             get permuted 5% p-value GLM threshold.
+  * *Description: Perform admixture mapping (with GLM), where genotype is encoded
+                  as a categorical variable.*
 
 
-**CTmax-GLM-analysis_clean.R**
+* **perform_glm_admixture_mapping_v2_gaussian_plus-multiple-cov_categorical-geno_NULL.R**
+  
+  * *Description: Perform null simulations of admixture mapping (categorical genotype) to
+                 get permuted 5% p-value GLM threshold.*
 
-Description: Plot results of admixture mapping. 
+
+* **CTmax-GLM-analysis_clean.R**
+
+  * *Description: Plot results of admixture mapping.* 
 
                    
-**power-simulations_LTREB-qtl_17-1hot-site-tanks.py**
+* **power-simulations_LTREB-qtl_17-1hot-site-tanks.py** 
 
-Description: Perform power simulations to determine the likelihood of recovering a 
-             QTL of some effect size by chance   
+  * *Description: Perform power simulations to determine the likelihood of recovering a 
+                  QTL of some effect size by chance.*
 
 
 ## Contact
