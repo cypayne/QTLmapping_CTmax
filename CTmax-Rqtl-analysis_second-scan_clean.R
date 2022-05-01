@@ -1,12 +1,13 @@
 ### CTmax-Rqtl-analysis_second-scan_clean.R
-# 
-# Script used to map second CTmax QTL in Payne et al 2021 
 #
-# Input file: 
-#   Rqtl format csv file, containing phenotype columns 
+# Script used to map second CTmax QTL with R/qtl in Payne et al 2021
+# See Figure 2
+#
+# Input file:
+#   Rqtl format csv file, containing phenotype columns
 #   followed by marker genotype columns. Each row represents
 #   one sample.
-#   Genotypes are as follows: 
+#   Genotypes are as follows:
 #     AA = homozygous X. malinche
 #     BB = homozygous X. birchmanii
 #     AB = heterozygote
@@ -21,20 +22,18 @@
 ## load library
 library(qtl)
 
-setwd("~/Box/Schumer_lab_resources/Project_files/Thermal_tolerance_projects/Data/LTREB_qtl/CTmax-QTL_second-scan_data")
-
-###### LOAD DATA ######  
+###### LOAD DATA ######
 
 ## load 2nd QTL scan rqtl infile (csv) = 30244 (20k bp thinned) markers, 152 individuals, 31 phenotypes
-data<-read.cross("csv",dir="","LTREB-CTmax-oct2020-ONLY_20k-thinned-genos_no-xtrm-hi_22onehot-site-tanks_ScyDAA6-2113-HRSCAF-2539.8811359-onehot.rqtl.csv", na.strings=c("NA"),estimate.map=FALSE)
+data<-read.cross("csv",dir="Scripts/input_files","LTREB-CTmax-oct2020-ONLY_20k-thinned-genos_no-xtrm-hi_22onehot-site-tanks_ScyDAA6-2113-HRSCAF-2539.8811359-onehot.rqtl.csv", na.strings=c("NA"),estimate.map=FALSE)
 
 # check that cross type, # individuals, and # markers are correct
 # 30244 (20k bp thinned) markers, 152 individuals, 35 phenotypes
 # 93% genoytped, 100% phenotyped
-summary(data) 
+summary(data)
 
 
-###### REMOVE INDVS & MARKERS WITH EXCESS MISSING DATA ######  
+###### REMOVE INDVS & MARKERS WITH EXCESS MISSING DATA ######
 
 ## plot: visualize missing data patterns in data
 par(mfrow=c(1,2), las=1)
@@ -95,7 +94,7 @@ for(i in 1:3) plot(gfreq[i,], ylab="Genotype frequency", main=c("AA", "AB", "BB"
 ###### ESTIMATE RECOMBINATION ######
 
 ## estimate recombination between each pair of markers, calculate LOD for test of rec. freq. = 1/2
-# Note: this operation requires high memory and time allocation, recommend running on a cluster/server, 
+# Note: this operation requires high memory and time allocation, recommend running on a cluster/server,
 #       after figuring out the above parameters
 data_sub.ds <- est.rf(data_sub.ds)
 
@@ -167,16 +166,16 @@ summary(model_all)
 
 # 2nd scan
 #geno <- as.factor(pull.geno(data_prob, "ScyDAA6-2113-HRSCAF-2539:8811359"))
-#summary(lm(ctmax ~ geno + hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 + 
-#             STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 + 
+#summary(lm(ctmax ~ geno + hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 +
+#             STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 +
 #             STM.6 + STM.7))
 # pull selected covariates (plus hybrid_index), including the interacting covariates
-#  ctmax ~ hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 + 
-#  STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 + 
+#  ctmax ~ hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 +
+#  STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 +
 #  STM.6 + STM.7
 covariates <- pull.pheno(data_prob, c("hybrid_index","STH.1","STH.2","STH.3","STH.4","STH.7","STH.8","STL.1","STL.2","STL.4","STL.5","STL.6","STL.7","STM.2",
                                       "STM.4","STM.5","STM.6","STM.7","homo_birch0.0","het1.0","homo_mal2.0"))
-# add one-hot encoded genotype states as interaction terms 
+# add one-hot encoded genotype states as interaction terms
 interactor <- pull.pheno(data_prob, c("homo_birch0.0","het1.0","homo_mal2.0"))
 
 ###### RUN SINGLE-QTL SCAN ######
@@ -192,6 +191,9 @@ saveRDS(scanone.hk, file="ltreb-only-CTmax_17-1hot-site-tanks.scanone-hk_second-
 ## run permutations to define the LOD threshold of significance
 perm.hk <- scanone(data_prob, method="hk", addcovar=covariates, intcovar=interactor, n.perm=1000)
 saveRDS(perm.hk, "LTREB-only-ctmax_perm_17-site-tank.hk_perm.hk_second-scan_clean.rds")
+
+#perm.hk <- readRDS("LTREB-only-ctmax_perm_17-site-tank.hk_perm.hk_second-scan_clean.rds")
+#quantile(perm.hk,c(0.8,0.9,0.95))
 
 ## get genome-wide LOD thresholds using genome-scan-adjusted p-values
 summary(perm.hk,alpha=c(0.05, 0.1, 0.2))
@@ -246,9 +248,46 @@ bayesint(scanone.hk,"ScyDAA6-5984-HRSCAF-6694",0.95,expandtomarkers = TRUE)
 
 
 ###### MAKE EFFECT PLOTS ######
+## Load data_prob object
+data_prob <- readRDS("ltreb-ctmax-qtl-filtered_22-1hot-site-tank_data-prob_second-scan_clean.rds")
 
 ## impute missing genotypes
 data_sim <- sim.geno(data_prob,step=1,n.draws=16)
+
+## plot estimated effect of QTL: phenotype vs marker genotype
+malcol=rgb(0/255,0/255,175/255)
+hetcol=rgb(100/255,0/255,175/255)
+bircol=rgb(150/255,0/255,0/255)
+effect_colors = c(malcol,hetcol,bircol)
+
+# 1st scan
+mar_chr22 <- find.marker(data_prob, chr='ScyDAA6-2113-HRSCAF-2539', pos=8.811359)
+# simple effect plot
+pdf("ltreb-only-CTmax_17-1hot-site-tanks_chr22-qtl-effect-plot.pdf",5.5,7)
+effectplot(data_sim,mname1=mar_chr22,main='22@8.81',ylab = expression('CT'['max']*' ('*~degree*C*')'))
+dev.off()
+# effect plots with individuals as points
+pdf("ltreb-only-CTmax_17-1hot-site-tanks_chr22-qtl-effect-plot-w-points.pdf",5.5,7)
+
+plotPXG(data_prob,marker=mar_chr22,main='22@8.81',infer=FALSE, ylab = expression('CT'['max']*' ('*~degree*C*')'), col = effect_colors)
+
+dev.off()
+
+# 2nd scan
+mar_chr15 <- find.marker(data_prob, chr='ScyDAA6-5984-HRSCAF-6694', pos=4.408039)
+plotPXG(data_prob,marker=mar_chr15,main='15@4.41')
+effectplot(data_sim,mname1=mar_chr15,main='15@4.41')
+
+## plot the joint effects of the chr22 QTL and chr15 peak
+pdf("ltreb-only-CTmax_17-1hot-site-tanks_chr22-qtl-chr15-peak-interaction-plot.pdf",5.5,7)
+par(mfrow=c(1,1), las=1)
+#effectplot(data_sim, mname1="ScyDAA6-2113-HRSCAF-2539@8.81", mname2="ScyDAA6-5984-HRSCAF-6694@4.41", main = "22@8.81 x 15@5.85")
+effectplot(data_sim, mname2="ScyDAA6-2113-HRSCAF-2539@8.81", mname1="ScyDAA6-5984-HRSCAF-6694@4.41", geno1=c("MM","MB","BB"), geno2=c("MM","MB","BB"), var.flag = "group", main = "15@4.41 x 22@8.81", xlab = "Genotype at chr22 QTL", ylab = expression('CT'['max']*' ('*~degree*C*')'), col = effect_colors, add.legend = TRUE, legend.lab = "chr15 QTL")
+dev.off()
+
+pdf("ltreb-only-CTmax_17-1hot-site-tanks_chr22-qtl-chr15-peak-interaction-plot-w-points.pdf",9.8,8.2)
+plotPXG(data_prob, marker=c(mar_chr22, mar_chr15))
+dev.off()
 
 ## plot estimated effect of QTL: phenotype vs marker genotype
 # 2nd scan
@@ -270,7 +309,7 @@ eff
 #  BB: 36.27023, 0.1734309
 
 ## plot estimated QTL effects along chr15 (shows additive and dominance effects)
-# effect summary for 15@4.41: 
+# effect summary for 15@4.41:
 # a           d             se.a        se.d
 # 0.22691415 -0.3949753     0.1383072 0.1772078
 effect_table<-effectscan(data_sim, pheno.col="ctmax", c("ScyDAA6-5984-HRSCAF-6694"), draw=F, get.se=T)
@@ -326,22 +365,22 @@ dp_noNA[dp_noNA == '-']<-NA
 dp_noNA<-na.omit(dp_noNA)
 dim(dp_noNA)
 
-## perform a linear regression with the full model and get the R^2 value 
+## perform a linear regression with the full model and get the R^2 value
 # full model adjusted R^2: 0.7126 (pval < 2e-16)
-lm.res<-lm(ctmax ~ as.factor(chr15_geno) + hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 + 
-             STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 + 
+lm.res<-lm(ctmax ~ as.factor(chr15_geno) + hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 +
+             STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 +
              STM.6 + STM.7 + as.factor(chr22_interactor) + as.factor(chr15_geno):as.factor(chr22_interactor),data=dp_noNA)
 summary(lm.res)
 # an ANOVA should give the same result
-aov.res <- aov(ctmax ~ chr15_geno + hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 + 
-                 STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 + 
+aov.res <- aov(ctmax ~ chr15_geno + hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 +
+                 STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 +
                  STM.6 + STM.7 + chr22_interactor + chr15_geno:chr22_interactor,data=dp_noNA)
 summary(aov.res)
 
 ## get the adjusted R^2 from the null model (i.e. without genotype as a coefficient)
 # null adj R^2: 0.6666 (pval < 2e-16)
-null.lm.res<-lm(ctmax ~ hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 + 
-                  STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 + 
+null.lm.res<-lm(ctmax ~ hi + STH.1 + STH.2 + STH.3 + STH.4 + STH.7 + STH.8 + STL.1 +
+                  STL.2 + STL.4 + STL.5 + STL.6 + STL.7 + STM.2 + STM.4 + STM.5 +
                   STM.6 + STM.7 + as.factor(chr22_interactor),data=dp_noNA)
 summary(null.lm.res)
 
@@ -352,38 +391,39 @@ effect = 0.7126 - 0.6666 # 0.046 (4.6%)
 ## get log likelihood difference between focal and null models
 summary(lm.res)
 model2<-glm(as.numeric(ctmax)~as.numeric(hi)+
-              as.factor(STH.1) + as.factor(STH.2) + as.factor(STH.3) + 
-              as.factor(STH.4) + as.factor(STH.7) + as.factor(STH.8) + 
-              as.factor(STL.1) + as.factor(STL.2) + as.factor(STL.4) + 
-              as.factor(STL.5) + as.factor(STL.6) + as.factor(STL.7) + 
-              as.factor(STM.2) + as.factor(STM.4) + as.factor(STM.5) + 
+              as.factor(STH.1) + as.factor(STH.2) + as.factor(STH.3) +
+              as.factor(STH.4) + as.factor(STH.7) + as.factor(STH.8) +
+              as.factor(STL.1) + as.factor(STL.2) + as.factor(STL.4) +
+              as.factor(STL.5) + as.factor(STL.6) + as.factor(STL.7) +
+              as.factor(STM.2) + as.factor(STM.4) + as.factor(STM.5) +
               as.factor(STM.6) + as.factor(STM.7) + as.factor(chr22_interactor),data=dp_noNA,family="gaussian")
 null<-logLik(model2)[1]
 
 model1<-glm(as.numeric(ctmax)~as.numeric(hi)+
-              as.factor(STH.1) + as.factor(STH.2) + as.factor(STH.3) + 
-              as.factor(STH.4) + as.factor(STH.7) + as.factor(STH.8) + 
-              as.factor(STL.1) + as.factor(STL.2) + as.factor(STL.4) + 
-              as.factor(STL.5) + as.factor(STL.6) + as.factor(STL.7) + 
-              as.factor(STM.2) + as.factor(STM.4) + as.factor(STM.5) + 
+              as.factor(STH.1) + as.factor(STH.2) + as.factor(STH.3) +
+              as.factor(STH.4) + as.factor(STH.7) + as.factor(STH.8) +
+              as.factor(STL.1) + as.factor(STL.2) + as.factor(STL.4) +
+              as.factor(STL.5) + as.factor(STL.6) + as.factor(STL.7) +
+              as.factor(STM.2) + as.factor(STM.4) + as.factor(STM.5) +
               as.factor(STM.6) + as.factor(STM.7) + as.factor(chr22_interactor) +
               as.factor(chr22_interactor):as.factor(chr15_geno) + as.factor(chr15_geno),data=dp_noNA,family="gaussian")
 focal<-logLik(model1)[1]
 
 # calculate log likelihood difference
 like_diff<-focal-null
-like_diff # 13.5293 
+like_diff # 13.5293
 
 
 ###### CREATE A NICE MANHATTAN PLOT OF GENOME-WIDE LODs ######
 
-### To generate an organized genome-wide manhattan plot, convert chromosome names to numbers using 
+### To generate an organized genome-wide manhattan plot, convert chromosome names to numbers using
 #     ./replace-chrom-name.py ./match_xmac_chroms_xbir-10x_chroms.txt <infile>
-#   in ./Scripts/
-scanone.hk.df_rename <- read.csv("ltreb-only-CTmax_17-1hot-site-tanks.scanone-hk_clean.tsv_chr-renamed.csv")
+scanone.hk.df_rename <- read.csv("ltreb-only-CTmax_17-1hot-site-tanks.scanone-hk_second-scan_clean.tsv_chr-renamed.csv")
 
 ## load the qqman manhattan plot function
-source("~/Box/Schumer_lab_resources/Project_files/Thermal_tolerance_projects/Scripts/adapted_qqman.R")
+#source("~/Box/Schumer_lab_resources/Project_files/Thermal_tolerance_projects/Scripts/adapted_qqman.R")
+
+library("qqman")
 
 ## Function: prepares data frame with chr,pos,lod columns to create manhattan plot
 #  make sure 'cutoff_lod' is set to the LOD threshold
@@ -395,25 +435,34 @@ mh_plot<-function(chr_pos_lod){
   # data_trim$CHR<-chr_to_group(as.character.factor(cpl.df$chr))
   data_trim$CHR<-cpl.df$chr
   data_trim$BP<-(cpl.df$pos)*1e6
-  data_trim$P<-cpl.df$lod
+  data_trim$P<- (10^(-1*(cpl.df$lod)))
+  data_trim$SNP<-cpl.df$snp
   data_trim<-as.data.frame(data_trim)
   data_trim<-na.omit(data_trim)
   # data_trim$CHR <- as.character.factor(data_trim$CHR)
-  data_trim$CHR<-data_trim$CHR
-  manhattan(data_trim,genomewideline=cutoff_lod,suggestiveline=-1, cex.axis=1.5, cex.lab=4)
-  
+  manhattan(data_trim, suggestiveline=NULL, genomewideline=NULL, ylim=c(0,10), cex.axis=1.5, cex.lab=1.5)
+
   return(data_trim)
 }
 
+mh_plot(scanone.hk.df_rename)
+
+# significance thresholds
+#5%  9.63
+#10% 8.96
+#20% 8.32
+cutoff_lod = 8.96
+abline(h=cutoff_lod, col="red")
+abline(h=9.63, col="grey")
+
 ## look at all of the peaks that surpass the genome-wide LOD threshold
 scanone.hk.df_rename[scanone.hk.df_rename$lod>cutoff_lod,]
-# ScyDAA6-2113-HRSCAF-2539:8811359  22 8.811359 4.366771
-# ScyDAA6-2113-HRSCAF-2539:8831590  22 8.831590 4.361586
-# ScyDAA6-2113-HRSCAF-2539:8851788  22 8.851788 4.356347
+#15 4.408039 9.101299 15:4.408039
 
-#  and all those under the 2-LOD interval
-scanone.hk.df_rename[scanone.hk.df_rename$lod>lint2 & scanone.hk.df_rename$chr == "22" ,]
-write.table(scanone.hk.df_rename[scanone.hk.df_rename$lod>lint2 & scanone.hk.df_rename$chr == "22" ,],'ltreb-ctmax_grp22-all-markers-under-2LOD_chr-pos-lod.tsv',sep="\t",row.names=F,quote=F)
+lint1.5 = cutoff_lod - 1.5
+#  and all those under the 1.5-LOD interval
+scanone.hk.df_rename[scanone.hk.df_rename$lod>lint1.5 & scanone.hk.df_rename$chr == "15" ,]
+write.table(scanone.hk.df_rename[scanone.hk.df_rename$lod>lint1.5 & scanone.hk.df_rename$chr == "15" ,],'ltreb-ctmax_grp15-all-markers-under-1.5LOD_chr-pos-lod.tsv',sep="\t",row.names=F,quote=F)
 
 ## plot
 pdf("chr22-ctmax-qtl_first-scan_genome-wide-manhattan.pdf",10.5,5.5)
@@ -438,7 +487,7 @@ ctmax<-pheno_data$ctmax         # CTmax
 model <- lm(ctmax~hi)
 summary(model)
 cor.test(ctmax,hi,method="pearson") # ctmax,hi: r=+0.1185137, pval=0.1472
-# plot correlation 
+# plot correlation
 pdf("CTmax-vs-genome-wide-ancestry_corr-plot.pdf",6,6)
 plot(hi,ctmax,pch = 16, cex = 1.3, col = "light grey", main = "CTmax and genome-wide X. malinche ancestry",xlab="hybrid index",ylab="CTmax (Celsius)")
 abline(34.7295,2.1980, lwd = 3, col="dark blue")
